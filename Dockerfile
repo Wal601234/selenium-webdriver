@@ -2,13 +2,12 @@ FROM python:3.8-slim
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV CHROME_VERSION=147.0.7727.137
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt update && apt install -y \
     wget \
+    unzip \
     ca-certificates \
-    gnupg \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -20,18 +19,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgtk-3-0 \
     libnspr4 \
     libnss3 \
+    libx11-xcb1 \
     libxcomposite1 \
     libxdamage1 \
-    libxfixes3 \
-    libxkbcommon0 \
     libxrandr2 \
     xdg-utils \
-    && wget -q -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && apt-get install -y --no-install-recommends /tmp/google-chrome.deb \
-    && pip install --no-cache-dir selenium webdriver-manager \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/*
+    && wget https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip \
+    && unzip chrome-linux64.zip \
+    && mv chrome-linux64 /opt/chrome \
+    && ln -sf /opt/chrome/chrome /usr/bin/google-chrome \
+    && wget https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip \
+    && unzip chromedriver-linux64.zip \
+    && mv chromedriver-linux64/chromedriver /usr/bin/chromedriver \
+    && chmod +x /usr/bin/chromedriver \
+    && pip install selenium \
+    && rm -rf chrome-linux64.zip chromedriver-linux64.zip chromedriver-linux64 \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY firsttest.py .
+COPY index.html .
 
 CMD ["python", "firsttest.py"]
